@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Merger</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Image Merger</h1>
+
+    <div class="input-area">
+        <label for="overlayInput">Transparent Overlay (1206x2622 PNG):</label>
+        <input type="file" id="overlayInput" accept="image/png">
+        <br><br>
+        <label for="backgroundInput">Background Images (9:16 Crops):</label>
+        <input type="file" id="backgroundInput" accept="image/*" multiple>
+    </div>
+
+    <button id="mergeButton">Merge Images</button>
+
+    <div class="output-area">
+        <h2>Merged Image:</h2>
+        <img id="mergedImage" src="" alt="Merged Image">
+        <a id="downloadLink" style="display: none;">Download Merged Image</a>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
