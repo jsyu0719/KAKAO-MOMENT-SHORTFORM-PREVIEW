@@ -37,7 +37,7 @@ mergeButton.addEventListener('click', function() {
                         const ctx = canvas.getContext('2d');
 
                         // Draw background image (resized)
-                        ctx.drawImage(backgroundImage, 0, 0, 2363, 1206);
+                        ctx.drawImage(backgroundImage, 0, 0, 1206, 2363);
 
                         // Draw overlay image on top
                         ctx.drawImage(overlayImage, 0, 0);
@@ -59,3 +59,4 @@ mergeButton.addEventListener('click', function() {
     }
     overlayReader.readAsDataURL(overlayFile);
 });
+
