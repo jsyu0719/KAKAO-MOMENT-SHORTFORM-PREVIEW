@@ -19,8 +19,8 @@ mergeButton.addEventListener('click', function() {
         overlayImage.onload = function() {
 
             // Validate overlay dimensions
-            if (overlayImage.width !== 1206 || overlayImage.height !== 2622) {
-                alert("Overlay image must be 1206x2622 pixels.");
+            if (overlayImage.width !== 720 || overlayImage.height !== 1565) {
+                alert("Overlay image must be 720x1565 pixels.");
                 return;
             }
 
@@ -32,12 +32,12 @@ mergeButton.addEventListener('click', function() {
                     const backgroundImage = new Image();
                     backgroundImage.onload = function() {
                         const canvas = document.createElement('canvas');
-                        canvas.width = 1206; // Overlay width
-                        canvas.height = 2622; // Overlay height
+                        canvas.width = 720; // Overlay width
+                        canvas.height = 1565; // Overlay height
                         const ctx = canvas.getContext('2d');
 
                         // Draw background image (resized)
-                        ctx.drawImage(backgroundImage, 0, 0, 1206, 2363);
+                        ctx.drawImage(backgroundImage, 0, 0, 720, 1280);
 
                         // Draw overlay image on top
                         ctx.drawImage(overlayImage, 0, 0);
@@ -59,4 +59,5 @@ mergeButton.addEventListener('click', function() {
     }
     overlayReader.readAsDataURL(overlayFile);
 });
+
 
