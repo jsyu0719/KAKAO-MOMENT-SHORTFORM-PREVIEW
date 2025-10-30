@@ -9,7 +9,7 @@ const OVERLAY_WIDTH = 720;
 const OVERLAY_HEIGHT = 1565;
 const BACKGROUND_TARGET_WIDTH = 720; // Matches overlay width for background area
 const BACKGROUND_TARGET_HEIGHT = 1565; // Matches overlay height for background area
-const BACKGROUND_CROP_START_X = 34; // Start X-axis for background crop
+const BACKGROUND_CROP_START_Y = 34; // Start Y-axis for background crop
 const JPG_QUALITY = 0.9; // JPG compression quality (0.0 to 1.0)
 // --- End Configuration ---
 
@@ -179,4 +179,5 @@ mergeButton.addEventListener('click', function() {
     };
     overlayReader.readAsDataURL(overlayFile);
 });
+
 
