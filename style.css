@@ -1,31 +1,109 @@
 body {
     font-family: sans-serif;
     text-align: center;
+    margin: 20px;
+    background-color: #f4f4f4;
+}
+
+h1 {
+    color: #333;
 }
 
 .input-area {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    display: inline-block; /* To center the div */
+    text-align: left; /* Align content inside */
+}
+
+.input-area label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
+}
+
+.input-area input[type="file"] {
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    padding: 8px;
+    border-radius: 4px;
+    width: 90%; /* Adjust width for better appearance */
+}
+
+button {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
     margin-bottom: 20px;
 }
 
+button:hover {
+    background-color: #0056b3;
+}
+
 .output-area {
+    margin-top: 30px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    display: inline-block; /* To center the div */
+    width: 90%; /* Occupy more width */
+    max-width: 1200px; /* Limit max width */
+}
+
+#mergedImagePreviews {
+    display: flex; /* Use flexbox for horizontal layout */
+    flex-wrap: wrap; /* Allow items to wrap to the next line */
+    justify-content: center; /* Center items horizontally */
+    gap: 20px; /* Space between items */
     margin-top: 20px;
+    padding-bottom: 20px; /* Add some padding at the bottom */
 }
 
-#mergedImage {
-    max-width: 500px; /* Adjust as needed */
-    border: 1px solid #ccc;
+.merged-preview-item {
+    border: 1px solid #eee;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
 }
 
-#downloadLink {
+.merged-preview-item img {
+    max-width: 200px; /* Smaller preview size */
+    height: auto;
     display: block;
-    margin-top: 10px;
-    padding: 10px 20px;
-    background-color: #4CAF50;
+    margin: 0 auto 10px auto; /* Center image and add space below */
+    border: 1px solid #ddd;
+}
+
+.merged-preview-item p {
+    font-size: 0.9em;
+    color: #666;
+    margin: 0;
+}
+
+
+#downloadZipLink {
+    display: block;
+    margin: 20px auto; /* Center the button */
+    padding: 12px 25px;
+    background-color: #28a745; /* Green for download */
     color: white;
     text-decoration: none;
     border-radius: 5px;
+    font-size: 18px;
+    max-width: 300px; /* Limit button width */
 }
 
-#downloadLink:hover {
-    background-color: #3e8e41;
+#downloadZipLink:hover {
+    background-color: #218838;
 }
