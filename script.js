@@ -43,7 +43,7 @@ mergeButton.addEventListener('click', function() {
                         const ctx = canvas.getContext('2d');
 
                         // Target area for background (within the overlay)
-                        const targetX = 0;
+                        const targetX = 34;
                         const targetY = 0;
                         const targetWidth = 720; // Corrected width
                         const targetHeight = 1280; // Corrected height
@@ -94,4 +94,5 @@ mergeButton.addEventListener('click', function() {
     }
     overlayReader.readAsDataURL(overlayFile);
 });
+
 
