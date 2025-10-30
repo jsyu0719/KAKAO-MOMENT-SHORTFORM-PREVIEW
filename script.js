@@ -10,7 +10,7 @@ const OVERLAY_HEIGHT = 1565;
 
 // The area on the canvas where the background image will be drawn
 const CANVAS_BACKGROUND_AREA_X = 0;
-const CANVAS_BACKGROUND_AREA_Y = 0;
+const CANVAS_BACKGROUND_AREA_Y = 0; // Background starts at y=0 on the canvas
 const CANVAS_BACKGROUND_AREA_WIDTH = OVERLAY_WIDTH; // Fill entire overlay width
 const CANVAS_BACKGROUND_AREA_HEIGHT = 1424; // Target height as specified
 
@@ -66,46 +66,90 @@ mergeButton.addEventListener('click', function() {
                         // --- Background Drawing Logic ---
 
                         // Source region of the background image to be used AFTER cropping 38px from left
-                        const sourceWidthAfterCrop = backgroundImage.width - BACKGROUND_SOURCE_CROP_X;
-                        const sourceHeight = backgroundImage.height;
-                        const sourceX = BACKGROUND_SOURCE_CROP_X;
-                        const sourceY = 0;
+                        const sourceCropStartX = BACKGROUND_SOURCE_CROP_X;
+                        const sourceWidthAfterCrop = backgroundImage.width - sourceCropStartX;
+                        const sourceHeightFull = backgroundImage.height;
 
                         // Calculate scaling based on the *cropped* source width and target canvas width
                         const scaleFactor = CANVAS_BACKGROUND_AREA_WIDTH / sourceWidthAfterCrop;
 
-                        const scaledSourceHeight = sourceHeight * scaleFactor;
+                        const scaledSourceHeight = sourceHeightFull * scaleFactor;
 
-                        let destX = CANVAS_BACKGROUND_AREA_X;
-                        let destY = CANVAS_BACKGROUND_AREA_Y;
-                        let destWidth = CANVAS_BACKGROUND_AREA_WIDTH;
-                        let destHeight = scaledSourceHeight;
+                        let srcX = sourceCropStartX;  // Initial source X from original image
+                        let srcY = 0;                   // Initial source Y from original image
+                        let srcWidth = sourceWidthAfterCrop; // Initial source width from original image
+                        let srcHeight = sourceHeightFull;    // Initial source height from original image
 
-                        // Center vertically within the CANVAS_BACKGROUND_AREA_HEIGHT (1424px)
+                        let destX = CANVAS_BACKGROUND_AREA_X;   // Destination X on canvas
+                        let destY = CANVAS_BACKGROUND_AREA_Y;   // Destination Y on canvas
+                        let destWidth = CANVAS_BACKGROUND_AREA_WIDTH; // Destination Width on canvas
+                        let destHeight = CANVAS_BACKGROUND_AREA_HEIGHT; // Destination Height on canvas (fixed 1424px)
+
+                        // Adjust sourceY and sourceHeight for vertical centering/cropping
                         if (scaledSourceHeight > CANVAS_BACKGROUND_AREA_HEIGHT) {
-                            // If scaled height is greater, crop top/bottom by adjusting destY
-                            destY = CANVAS_BACKGROUND_AREA_Y - (scaledSourceHeight - CANVAS_BACKGROUND_AREA_HEIGHT) / 2;
+                            // If the scaled image is taller than the target area, crop from top/bottom
+                            const cropAmountPx = (scaledSourceHeight - CANVAS_BACKGROUND_AREA_HEIGHT) / scaleFactor / 2;
+                            srcY += cropAmountPx;
+                            srcHeight -= (cropAmountPx * 2);
                         } else {
-                            // If scaled height is smaller, center vertically by adjusting destY
+                            // If the scaled image is shorter, it should be centered vertically
+                            // No change to srcY/srcHeight needed, destY will be adjusted to center.
+                            // However, we want destY to be 0 and then scale the image to fit 1424px.
+                            // To fill the 1424px, we need to ensure the scaled image is 1424px high.
+                            // Since we want to maintain aspect ratio after horizontal scale,
+                            // this means if it's shorter, it *won't* fill 1424px.
+                            // Given the requirement to fill the width (720) and constrain height (1424),
+                            // if scaledSourceHeight is less than 1424, there will be empty space.
+                            // The current interpretation is to scale to fit width, then crop top/bottom to 1424.
+                            // If you meant to stretch the image vertically to fit 1424px if it's too short,
+                            // we would need different logic.
+                            // For now, adhering to "fill width, crop excess height".
+                            // If scaledSourceHeight is < CANVAS_BACKGROUND_AREA_HEIGHT, there will be blank space
+                            // at the bottom or top/bottom if centered. Let's keep destY = 0
+                            // and destHeight = scaledSourceHeight to show the full image if it's shorter,
+                            // but then we'd have to ensure the overlay covers the blank space.
+                            //
+                            // Re-evaluating: "Height will ideally start 0 pixel and ended in around 1424 pixel"
+                            // This means the canvas area from Y=0 to Y=1424 *must* be filled by the background.
+                            // So, we must scale its height to 1424, *after* scaling its width to 720.
+                            // This implies *ignoring* the aspect ratio for the final height if it doesn't fit 1424px.
+                            // If aspect ratio must be maintained, and it's shorter, then it won't fill 1424.
+                            // Let's assume aspect ratio *is maintained* by the width scale, and we crop to 1424px.
+                            // So if scaledSourceHeight < 1424, it will just draw the scaledSourceHeight.
+                            // If the expectation is to *stretch* it to exactly 1424px if shorter, that's a different code path.
+
+                            // Let's stick with the interpretation: scale to fit 720px width, then crop or show full height within 1424px, maintaining aspect.
+                            // If scaledSourceHeight < CANVAS_BACKGROUND_AREA_HEIGHT, then we center it in the 1424px space.
                             destY = CANVAS_BACKGROUND_AREA_Y + (CANVAS_BACKGROUND_AREA_HEIGHT - scaledSourceHeight) / 2;
+                            destHeight = scaledSourceHeight; // Show its full scaled height
                         }
 
 
                         // Draw the cropped and scaled background image onto the canvas
                         ctx.drawImage(
                             backgroundImage,     // Source image object
-                            sourceX,             // Source X: Start cropping from 38px from left
-                            sourceY,             // Source Y: Start cropping from top
-                            sourceWidthAfterCrop,// Source Width: The width of the image *after* cropping
-                            sourceHeight,        // Source Height: Full height of the image
-                            destX,               // Destination X on canvas
-                            destY,               // Destination Y on canvas
-                            destWidth,           // Destination Width on canvas (720px)
-                            destHeight           // Destination Height on canvas (scaled height)
+                            srcX,                // Source X: Start cropping from 38px from left (adjusted srcX for vertical crop)
+                            srcY,                // Source Y: Adjusted for vertical centering
+                            srcWidth,            // Source Width: The width of the image *after* cropping
+                            srcHeight,           // Source Height: Adjusted for vertical centering
+                            destX,               // Destination X on canvas (0)
+                            destY,               // Destination Y on canvas (0, or adjusted for centering if shorter)
+                            destWidth,           // Destination Width on canvas (720)
+                            destHeight           // Destination Height on canvas (scaled height or 1424, if cropped)
                         );
+
+                        // Clear any parts of the 1424px height that the image might not cover if it's shorter and not filling
+                        // This prevents issues if the image is too short to fill the 1424px area and destY is not 0
+                        ctx.clearRect(0, 0, CANVAS_BACKGROUND_AREA_WIDTH, destY);
+                        ctx.clearRect(0, destY + destHeight, CANVAS_BACKGROUND_AREA_WIDTH, CANVAS_BACKGROUND_AREA_HEIGHT - (destY + destHeight));
+
                         // --- End Background Drawing Logic ---
 
                         // Draw overlay image on top
+                        // Note: If the overlay itself has transparent areas in the 0-1424px region
+                        // where the background should be visible, this is fine.
+                        // If the overlay has a solid background from 0-1424px, the background image
+                        // will be hidden unless you're trying to create a specific effect.
                         ctx.drawImage(overlayImage, 0, 0);
 
                         // Generate merged image data URL
