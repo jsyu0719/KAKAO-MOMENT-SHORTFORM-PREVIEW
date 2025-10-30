@@ -9,12 +9,13 @@ const OVERLAY_WIDTH = 720;
 const OVERLAY_HEIGHT = 1565;
 
 // The area on the canvas where the background image will be drawn
-// It starts at (0, 34) and extends to the full width of the overlay.
-// Its height will be (OVERLAY_HEIGHT - 34)
-const BACKGROUND_DRAW_START_X = 0; // Background image starts at x=0 on the canvas
-const BACKGROUND_DRAW_START_Y = 34; // Background image starts at y=34 on the canvas
-const BACKGROUND_DRAW_AREA_WIDTH = OVERLAY_WIDTH; // Background fills the full overlay width
-const BACKGROUND_DRAW_AREA_HEIGHT = OVERLAY_HEIGHT - BACKGROUND_DRAW_START_Y; // Remaining height for background
+const CANVAS_BACKGROUND_AREA_X = 0;
+const CANVAS_BACKGROUND_AREA_Y = 0;
+const CANVAS_BACKGROUND_AREA_WIDTH = OVERLAY_WIDTH; // Fill entire overlay width
+const CANVAS_BACKGROUND_AREA_HEIGHT = 1424; // Target height as specified
+
+// Cropping from the *source* background image
+const BACKGROUND_SOURCE_CROP_X = 38; // Crop 38 pixels from the left of the source image
 
 const JPG_QUALITY = 0.9; // JPG compression quality (0.0 to 1.0)
 // --- End Configuration ---
@@ -63,34 +64,44 @@ mergeButton.addEventListener('click', function() {
                         const ctx = canvas.getContext('2d');
 
                         // --- Background Drawing Logic ---
-                        // Calculate scaling to fill the target width on the canvas
-                        const scaleX = BACKGROUND_DRAW_AREA_WIDTH / backgroundImage.width;
 
-                        // Calculate the scaled height based on the original aspect ratio
-                        const scaledHeight = backgroundImage.height * scaleX;
+                        // Source region of the background image to be used AFTER cropping 38px from left
+                        const sourceWidthAfterCrop = backgroundImage.width - BACKGROUND_SOURCE_CROP_X;
+                        const sourceHeight = backgroundImage.height;
+                        const sourceX = BACKGROUND_SOURCE_CROP_X;
+                        const sourceY = 0;
 
-                        let drawX = BACKGROUND_DRAW_START_X;
-                        let drawY = BACKGROUND_DRAW_START_Y;
-                        let drawWidth = BACKGROUND_DRAW_AREA_WIDTH;
-                        let drawHeight = scaledHeight;
+                        // Calculate scaling based on the *cropped* source width and target canvas width
+                        const scaleFactor = CANVAS_BACKGROUND_AREA_WIDTH / sourceWidthAfterCrop;
 
-                        // Center vertically within the designated background area (BACKGROUND_DRAW_AREA_HEIGHT)
-                        if (scaledHeight > BACKGROUND_DRAW_AREA_HEIGHT) {
-                            // If scaled height is greater, crop top/bottom
-                            drawY = BACKGROUND_DRAW_START_Y - (scaledHeight - BACKGROUND_DRAW_AREA_HEIGHT) / 2;
+                        const scaledSourceHeight = sourceHeight * scaleFactor;
+
+                        let destX = CANVAS_BACKGROUND_AREA_X;
+                        let destY = CANVAS_BACKGROUND_AREA_Y;
+                        let destWidth = CANVAS_BACKGROUND_AREA_WIDTH;
+                        let destHeight = scaledSourceHeight;
+
+                        // Center vertically within the CANVAS_BACKGROUND_AREA_HEIGHT (1424px)
+                        if (scaledSourceHeight > CANVAS_BACKGROUND_AREA_HEIGHT) {
+                            // If scaled height is greater, crop top/bottom by adjusting destY
+                            destY = CANVAS_BACKGROUND_AREA_Y - (scaledSourceHeight - CANVAS_BACKGROUND_AREA_HEIGHT) / 2;
                         } else {
-                            // If scaled height is smaller, center vertically
-                            drawY = BACKGROUND_DRAW_START_Y + (BACKGROUND_DRAW_AREA_HEIGHT - scaledHeight) / 2;
+                            // If scaled height is smaller, center vertically by adjusting destY
+                            destY = CANVAS_BACKGROUND_AREA_Y + (CANVAS_BACKGROUND_AREA_HEIGHT - scaledSourceHeight) / 2;
                         }
 
-                        // Draw the background image onto the canvas
-                        // Using the 5-argument drawImage to just scale and position the whole source image
+
+                        // Draw the cropped and scaled background image onto the canvas
                         ctx.drawImage(
-                            backgroundImage,
-                            drawX,          // Destination X on canvas
-                            drawY,          // Destination Y on canvas
-                            drawWidth,      // Destination Width on canvas
-                            drawHeight      // Destination Height on canvas
+                            backgroundImage,     // Source image object
+                            sourceX,             // Source X: Start cropping from 38px from left
+                            sourceY,             // Source Y: Start cropping from top
+                            sourceWidthAfterCrop,// Source Width: The width of the image *after* cropping
+                            sourceHeight,        // Source Height: Full height of the image
+                            destX,               // Destination X on canvas
+                            destY,               // Destination Y on canvas
+                            destWidth,           // Destination Width on canvas (720px)
+                            destHeight           // Destination Height on canvas (scaled height)
                         );
                         // --- End Background Drawing Logic ---
 
