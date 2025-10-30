@@ -1,15 +1,21 @@
 const overlayInput = document.getElementById('overlayInput');
 const backgroundInput = document.getElementById('backgroundInput');
 const mergeButton = document.getElementById('mergeButton');
-const mergedImagePreviews = document.getElementById('mergedImagePreviews'); // New element for previews
+const mergedImagePreviews = document.getElementById('mergedImagePreviews');
 const downloadZipLink = document.getElementById('downloadZipLink');
 
 // --- Configuration ---
 const OVERLAY_WIDTH = 720;
 const OVERLAY_HEIGHT = 1565;
-const BACKGROUND_TARGET_WIDTH = 720; // Matches overlay width for background area
-const BACKGROUND_TARGET_HEIGHT = 1565; // Matches overlay height for background area
-const BACKGROUND_CROP_START_Y = 34; // Start Y-axis for background crop
+
+// The area on the canvas where the background image will be drawn
+// It starts at (0, 34) and extends to the full width of the overlay.
+// Its height will be (OVERLAY_HEIGHT - 34)
+const BACKGROUND_DRAW_START_X = 0; // Background image starts at x=0 on the canvas
+const BACKGROUND_DRAW_START_Y = 34; // Background image starts at y=34 on the canvas
+const BACKGROUND_DRAW_AREA_WIDTH = OVERLAY_WIDTH; // Background fills the full overlay width
+const BACKGROUND_DRAW_AREA_HEIGHT = OVERLAY_HEIGHT - BACKGROUND_DRAW_START_Y; // Remaining height for background
+
 const JPG_QUALITY = 0.9; // JPG compression quality (0.0 to 1.0)
 // --- End Configuration ---
 
@@ -44,7 +50,7 @@ mergeButton.addEventListener('click', function() {
             let imagesProcessedCount = 0; // Track how many images have been processed
 
             // Function to process each background image
-            const processBackgroundImage = (backgroundFile, index) => {
+            const processBackgroundImage = (backgroundFile) => {
                 const backgroundReader = new FileReader();
                 const originalFilename = backgroundFile.name.replace(/\.[^/.]+$/, ""); // Remove extension
 
@@ -57,41 +63,34 @@ mergeButton.addEventListener('click', function() {
                         const ctx = canvas.getContext('2d');
 
                         // --- Background Drawing Logic ---
-                        // Target area for background within the overlay
-                        const targetX = 0; // Background area starts from the left edge of overlay
-                        const targetY = 0; // Background area starts from the top edge of overlay
-
-                        // Calculate scaling to fill the target width
-                        const scaleX = BACKGROUND_TARGET_WIDTH / backgroundImage.width;
+                        // Calculate scaling to fill the target width on the canvas
+                        const scaleX = BACKGROUND_DRAW_AREA_WIDTH / backgroundImage.width;
 
                         // Calculate the scaled height based on the original aspect ratio
                         const scaledHeight = backgroundImage.height * scaleX;
 
-                        let drawX = targetX;
-                        let drawY = targetY; // Start drawing from the top of the background target area
-                        let drawWidth = BACKGROUND_TARGET_WIDTH;
+                        let drawX = BACKGROUND_DRAW_START_X;
+                        let drawY = BACKGROUND_DRAW_START_Y;
+                        let drawWidth = BACKGROUND_DRAW_AREA_WIDTH;
                         let drawHeight = scaledHeight;
 
-                        // Calculate vertical centering within the target background area (if scaledHeight > targetHeight)
-                        if (scaledHeight > BACKGROUND_TARGET_HEIGHT) {
-                            // If scaled height is greater, center vertically and crop top/bottom
-                            drawY = targetY - (scaledHeight - BACKGROUND_TARGET_HEIGHT) / 2;
+                        // Center vertically within the designated background area (BACKGROUND_DRAW_AREA_HEIGHT)
+                        if (scaledHeight > BACKGROUND_DRAW_AREA_HEIGHT) {
+                            // If scaled height is greater, crop top/bottom
+                            drawY = BACKGROUND_DRAW_START_Y - (scaledHeight - BACKGROUND_DRAW_AREA_HEIGHT) / 2;
                         } else {
                             // If scaled height is smaller, center vertically
-                            drawY = targetY + (BACKGROUND_TARGET_HEIGHT - scaledHeight) / 2;
+                            drawY = BACKGROUND_DRAW_START_Y + (BACKGROUND_DRAW_AREA_HEIGHT - scaledHeight) / 2;
                         }
 
-                        // Apply the horizontal crop starting from BACKGROUND_CROP_START_X
+                        // Draw the background image onto the canvas
+                        // Using the 5-argument drawImage to just scale and position the whole source image
                         ctx.drawImage(
                             backgroundImage,
-                            BACKGROUND_CROP_START_X, // Source X for crop on original image
-                            0, // Source Y for crop on original image
-                            backgroundImage.width - BACKGROUND_CROP_START_X, // Source Width for crop
-                            backgroundImage.height, // Source Height for crop
-                            drawX, // Destination X on canvas
-                            drawY, // Destination Y on canvas
-                            drawWidth, // Destination Width on canvas
-                            drawHeight // Destination Height on canvas
+                            drawX,          // Destination X on canvas
+                            drawY,          // Destination Y on canvas
+                            drawWidth,      // Destination Width on canvas
+                            drawHeight      // Destination Height on canvas
                         );
                         // --- End Background Drawing Logic ---
 
@@ -141,14 +140,13 @@ mergeButton.addEventListener('click', function() {
                         console.error(`Error loading background image: ${backgroundFile.name}`);
                         imagesProcessedCount++; // Still increment to avoid blocking zip creation
                         if (imagesProcessedCount === backgroundFiles.length) {
-                            // Try to generate zip even if some images failed
-                            zip.generateAsync({type:"blob"})
-                                .then(function(content) {
-                                    const url = URL.createObjectURL(content);
-                                    downloadZipLink.href = url;
-                                    downloadZipLink.download = "merged_images.zip";
-                                    downloadZipLink.style.display = 'block';
-                                });
+                            // If all others processed, try to generate zip anyway
+                            zip.generateAsync({type:"blob"}).then(function(content) {
+                                const url = URL.createObjectURL(content);
+                                downloadZipLink.href = url;
+                                downloadZipLink.download = "merged_images.zip";
+                                downloadZipLink.style.display = 'block';
+                            });
                         }
                         alert(`Failed to load background image: ${backgroundFile.name}. Skipping.`);
                     };
@@ -165,7 +163,7 @@ mergeButton.addEventListener('click', function() {
 
             // Process each background image
             for (let i = 0; i < backgroundFiles.length; i++) {
-                processBackgroundImage(backgroundFiles[i], i);
+                processBackgroundImage(backgroundFiles[i]);
             }
 
         }
@@ -179,5 +177,3 @@ mergeButton.addEventListener('click', function() {
     };
     overlayReader.readAsDataURL(overlayFile);
 });
-
-
